@@ -33,12 +33,29 @@ project(main C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+# ======================= FETCHCONTENT PARA SSD1306 =======================
+# PASSO 1: Habilitar o módulo FetchContent
+include(FetchContent)
+
+# PASSO 2: Declarar os detalhes da dependência
+FetchContent_Declare(
+    pico_ssd1306
+    GIT_REPOSITORY https://github.com/daschr/pico-ssd1306.git
+    GIT_TAG        main # Ou um commit hash para estabilidade
+)
+
+# PASSO 3: Baixar e disponibilizar o conteúdo
+FetchContent_MakeAvailable(pico_ssd1306)
+
+# PASSO 4: Criar um alvo de biblioteca para a dependência
+add_library(ssd1306_lib INTERFACE)
+target_include_directories(ssd1306_lib INTERFACE ${pico_ssd1306_SOURCE_DIR})
+target_sources(ssd1306_lib INTERFACE ${pico_ssd1306_SOURCE_DIR}/ssd1306.c)
+# ===============================================================================
+
 # Add executable. Default name is the project name, version 0.1
 file(GLOB SOURCE_FILES "src/*.c")
-add_executable(main 
-    ${SOURCE_FILES}
-    lib/pico-ssd1306/ssd1306.c    
-)
+add_executable(main ${SOURCE_FILES})
 
 
 pico_set_program_name(main "main")
@@ -53,13 +70,13 @@ target_link_libraries(main
     hardware_i2c
     hardware_pwm
     pico_stdlib
+    ssd1306_lib
 )
     
 
 # Add the standard include files to the build
 target_include_directories(main PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/lib/pico-ssd1306
     ${CMAKE_CURRENT_LIST_DIR}/inc
 )
 
